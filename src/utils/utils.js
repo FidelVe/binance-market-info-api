@@ -65,7 +65,7 @@ function createMemoryOrderBook(queryResponse) {
 /**
  * Updates a Map orderbook with the websocket response of the update of
  * said orderbook.
- * TODO: to optimize the function the function can be designed as an
+ * TODO: to optimize, the function can be designed as an
  * impure function, this means instead of copying the Maps inside the
  * orderbook, we directly modify the orderbook variable which resides
  * outside the local scope.
@@ -107,9 +107,6 @@ function updateMemoryOrderBook(orderbook, diff) {
         //
         // if diff.data.u is higher, then the new websocket message is
         // more recent then the lastest update in the memory order book
-        // console.log("id");
-        // console.log(`${diff.data.u} - ${newOrderBook[pairs[i]].lastUpdateId}`);
-        // console.log(diff);
         if (diff.data.u > newOrderBook[pairs[i]].lastUpdateId) {
           doUpdate = true;
           newOrderBook[pairs[i]].lastUpdateId = diff.data.u;
