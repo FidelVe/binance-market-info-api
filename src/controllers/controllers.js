@@ -1,9 +1,17 @@
+const utils = require("../utils/utils");
+
 /**
  * route: /api/v1/pairs
  */
 const getPair = async (req, res) => {
   //
-  console.log("request to '/api/v1/pairs'");
+  console.log("request to '/api/v1/pairs/:pair'");
+  res.set("Connection", "close").status(200);
+
+  // response
+  res.json({
+    result: utils.pairs
+  });
   res.end();
 };
 
@@ -12,7 +20,17 @@ const getPair = async (req, res) => {
  */
 const getPairs = async (req, res) => {
   //
-  console.log("request to '/api/v1/pairs/:pair'");
+  console.log("request to '/api/v1/pairs'");
+  console.log("inMemoryOrderBook");
+  const copyOfOrderBook = utils.copyOrderBook(req.inMemoryOrderBook);
+  const topOrders = utils.getTopOrders(copyOfOrderBook);
+  console.log(topOrders);
+  res.set("Connection", "close").status(200);
+
+  // response
+  res.json({
+    result: utils.pairs
+  });
   res.end();
 };
 

@@ -1,5 +1,31 @@
 // Variables
 const pairs = ["btcusdt", "ethusdt", "bnbusdt"];
+
+const pairInitState = {
+  lastUpdateId: null,
+  bids: [],
+  asks: []
+};
+
+const orderBookInitState = {
+  [pairs[0]]: { ...pairInitState },
+  [pairs[1]]: { ...pairInitState },
+  [pairs[2]]: { ...pairInitState }
+};
+
+const wsStringMulti = `wss://stream.binance.com:9443/stream?streams=${pairs[0].toLowerCase()}@depth/${pairs[1].toLowerCase()}@depth/${pairs[2].toLowerCase()}@depth`;
+
+/**
+ * creates a blank orderbook
+ */
+function getOrderBookInitState() {
+  return {
+    [pairs[0]]: { ...pairInitState },
+    [pairs[1]]: { ...pairInitState },
+    [pairs[2]]: { ...pairInitState }
+  };
+}
+
 /**
  * Takes a response from a query to the binance API in the following
  * format:
@@ -98,7 +124,7 @@ function updateMemoryOrderBook(orderbook, diff) {
       asks: new Map(orderbook[pair].asks)
     };
   });
-  // updating inMemoryOrderBook
+  // updating orderBookInitState
   for (let i = 0; i <= pairs.length - 1; i++) {
     if (stream.includes(pairs[i].toLowerCase())) {
       //
@@ -171,4 +197,81 @@ function updateMemoryOrderBook(orderbook, diff) {
   }
 }
 
-module.exports = { createMemoryOrderBook, pairs, updateMemoryOrderBook };
+/**
+ * gets the top orders (size of orderLength) of the in-memory orderbook
+ * @param {Object} orderbook - in-memory orderbook
+ * @param {number} orderLength - size or orders to return
+ */
+function getTopOrders(orderbook, orderLength = 5) {
+  const topOrderBooks = getOrderBookInitState();
+  const sortedOrderbook = sortOrderBook(orderbook);
+
+  pairs.forEach(pair => {
+    topOrderBooks[pair].bids = JSON.stringify(
+      sortedOrderbook[pair].bids.slice(0, orderLength)
+    );
+    topOrderBooks[pair].asks = JSON.stringify(
+      sortedOrderbook[pair].asks.slice(0, orderLength)
+    );
+  });
+  return topOrderBooks;
+}
+
+/**
+ * sorts an orderbook
+ * @param {Object} orderbook - orderbook to sort
+ */
+function sortOrderBook(orderbook) {
+  const sortedOrderBook = getOrderBookInitState();
+  pairs.forEach(pair => {
+    sortedOrderBook[pair].bids = [...orderbook[pair].bids].sort(customSort);
+    sortedOrderBook[pair].asks = [...orderbook[pair].asks].sort(
+      customSortReverse
+    );
+  });
+
+  return sortedOrderBook;
+}
+
+/**
+ * custom sort
+ */
+function customSort(a, b) {
+  return Number(b[0]) - Number(a[0]);
+}
+
+/**
+ * custom sort
+ */
+function customSortReverse(a, b) {
+  return Number(a[0]) - Number(b[0]);
+}
+
+/**
+ * function to make a copy with new Maps of the orderbook
+ */
+function copyOrderBook(orderbook) {
+  const copyOfOrderBook = {};
+  pairs.forEach(pair => {
+    copyOfOrderBook[pair] = {
+      lastUpdateId: orderbook[pair].lastUpdateId,
+      bids: new Map(orderbook[pair].bids),
+      asks: new Map(orderbook[pair].asks)
+    };
+  });
+
+  return copyOfOrderBook;
+}
+
+// exports
+module.exports = {
+  createMemoryOrderBook,
+  pairs,
+  orderBookInitState,
+  updateMemoryOrderBook,
+  wsStringMulti,
+  getTopOrders,
+  sortOrderBook,
+  copyOrderBook,
+  getOrderBookInitState
+};
