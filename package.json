@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "author": "fidelve",
   "license": "MIT",
   "devDependencies": {
+    "@types/mocha": "^10.0.0",
     "eslint": "^8.26.0",
-    "eslint-plugin-json": "^3.1.0"
+    "eslint-plugin-json": "^3.1.0",
+    "mocha": "^10.1.0"
   },
   "dependencies": {
     "cors": "^2.8.5",
