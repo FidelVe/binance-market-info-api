@@ -2,7 +2,7 @@
   "name": "membrane-interview-challenge",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./src/app.js",
   "scripts": {
     "test": "mocha",
     "start": "node src/app.js",
