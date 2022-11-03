@@ -340,7 +340,10 @@ function getEffectivePrice(orderbook, pair, type, amount) {
 }
 
 /**
- *
+ * check if a number is inside a defined range.
+ * @param {number} number - the number to check
+ * @param {array[]} range - the range to check
+ * @return {bool}
  */
 function numberIsInRange(number, range) {
   let maxAmountInRange = null;
@@ -363,7 +366,13 @@ function numberIsInRange(number, range) {
 }
 
 /**
- *
+ * Returns the max order size possible in an orderbook from a
+ * pair (ie: btcusdt), a type of operation ('buy' or 'sell') and a given
+ * limit size for the operation.
+ * @param {object} orderbook - the orderbook
+ * @param {pair} string - the pair to consult
+ * @param {type} string - either 'buy' or 'sell'
+ * @param {number} limit - limit size for the order
  */
 function getMaxOrderSize(orderbook, pair, type, limit) {
   const sortedOrderbook = sortOrderBook(orderbook, pair);
@@ -384,6 +393,11 @@ function getMaxOrderSize(orderbook, pair, type, limit) {
       const operationToCompare =
         (rollingPrice * rollingOrders + price * orders) /
         (rollingOrders + orders);
+
+      // the comparison between 'operationToCompare' and 'limitInNumber' will
+      // vary depending on the type of operation (either 'buy' or 'sell')
+      // the following ternary operation will set the proper order for
+      // the operation depending on the type.
       const firstOperatorInComparison =
         type === "buy" ? operationToCompare : limitInNumber;
       const secondOperatorInComparison =

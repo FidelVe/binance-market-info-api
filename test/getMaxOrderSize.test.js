@@ -51,7 +51,10 @@ const paramsForTest2 = {
     operationAmount: 20295.19
   },
   sell: {
-    result: (0.13888).toFixed(6),
+    result: (
+      0.12896 +
+      (20302.95 * 0.12896 - 20302.93 * 0.12896) / (20302.93 - 20302.67)
+    ).toFixed(6),
     operationType: "sell",
     operationAmount: 20302.93
   }
