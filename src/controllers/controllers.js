@@ -98,6 +98,7 @@ const getEffPrice = async (req, res) => {
         req.params.opType,
         req.query.limit
       );
+      response.result = maxOrderSize;
     } else {
       const effPrice = utils.getEffectivePrice(
         copyOfOrderBook,

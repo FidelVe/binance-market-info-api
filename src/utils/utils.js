@@ -339,33 +339,84 @@ function getEffectivePrice(orderbook, pair, type, amount) {
   return effPrice;
 }
 
-function getMaxOrderSize(orderbook, pair, type, amount) {
+/**
+ *
+ */
+function numberIsInRange(number, range) {
+  let maxAmountInRange = null;
+  let minAmountInRange = null;
+  const numberParsed = Number(number);
+
+  if (Number(range[range.length - 1][0]) - Number(range[0][0]) > 0) {
+    maxAmountInRange = Number(range[range.length - 1][0]);
+    minAmountInRange = Number(range[0][0]);
+  } else {
+    maxAmountInRange = Number(range[0][0]);
+    minAmountInRange = Number(range[range.length - 1][0]);
+  }
+
+  if (numberParsed <= maxAmountInRange && numberParsed >= minAmountInRange) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ *
+ */
+function getMaxOrderSize(orderbook, pair, type, limit) {
   const sortedOrderbook = sortOrderBook(orderbook, pair);
-  let rollingAmount = 0;
+  let rollingPrice = 0;
   let rollingOrders = 0;
-  const amountInNumber = Number(amount);
+  const limitInNumber = Number(limit);
 
   // get the list of asks or bids depending on the type param.
   // this operation defaults to the bids list if type != "buy"
   const orderList =
     type === "buy" ? sortedOrderbook[pair].asks : sortedOrderbook[pair].bids;
 
-  for (const entry of orderList) {
-    const price = Number(entry[0]);
-    const orders = Number(entry[1]);
+  if (numberIsInRange(limitInNumber, orderList)) {
+    for (const entry of orderList) {
+      const price = Number(entry[0]);
+      const orders = Number(entry[1]);
 
-    if (price * orders <= amountInNumber - rollingAmount) {
-      rollingAmount += price * orders;
-      rollingOrders += orders;
-    } else {
-      rollingOrders += (amountInNumber - rollingAmount) / price;
-      break;
+      const operationToCompare =
+        (rollingPrice * rollingOrders + price * orders) /
+        (rollingOrders + orders);
+      const firstOperatorInComparison =
+        type === "buy" ? operationToCompare : limitInNumber;
+      const secondOperatorInComparison =
+        type === "buy" ? limitInNumber : operationToCompare;
+
+      if (rollingOrders === 0) {
+        if (price === limitInNumber) {
+          return orders;
+        } else {
+          rollingPrice += price;
+          rollingOrders += orders;
+        }
+      } else if (rollingOrders > 0) {
+        if (firstOperatorInComparison < secondOperatorInComparison) {
+          rollingPrice = operationToCompare;
+          rollingOrders += orders;
+        } else if (operationToCompare === limitInNumber) {
+          return rollingOrders + orders;
+        } else {
+          return (
+            rollingOrders +
+            (rollingPrice * rollingOrders - limitInNumber * rollingOrders) /
+              (limitInNumber - price)
+          );
+        }
+      } else {
+        throw new Error("Param 'rollingOrders' cannot be less than zero");
+      }
     }
   }
-
-  const effPrice = amountInNumber / rollingOrders;
-  return effPrice;
+  return null;
 }
+
 // exports
 module.exports = {
   createMemoryOrderBook,
@@ -378,5 +429,6 @@ module.exports = {
   copyOrderBook,
   getOrderBookInitState,
   getEffectivePrice,
-  getMaxOrderSize
+  getMaxOrderSize,
+  numberIsInRange
 };
