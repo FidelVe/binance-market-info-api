@@ -245,18 +245,20 @@ function sortOrderBook(orderbook, onlyPair = null) {
 
   if (onlyPair == null) {
     pairs.forEach(pair => {
-      sortedOrderBook[pair].bids = [...orderbook[pair].bids].sort(customSort);
+      sortedOrderBook[pair].bids = [...orderbook[pair].bids].sort(
+        sortHighToLow
+      );
       sortedOrderBook[pair].asks = [...orderbook[pair].asks].sort(
-        customSortReverse
+        sortLowToHigh
       );
     });
   } else {
     if (pairs.includes(onlyPair)) {
       sortedOrderBook[onlyPair].bids = [...orderbook[onlyPair].bids].sort(
-        customSort
+        sortHighToLow
       );
       sortedOrderBook[onlyPair].asks = [...orderbook[onlyPair].asks].sort(
-        customSortReverse
+        sortLowToHigh
       );
     } else {
       // if the value of onlyPair is not a supported pair inside the
@@ -271,14 +273,14 @@ function sortOrderBook(orderbook, onlyPair = null) {
 /**
  * custom sort
  */
-function customSort(a, b) {
+function sortHighToLow(a, b) {
   return Number(b[0]) - Number(a[0]);
 }
 
 /**
  * custom sort
  */
-function customSortReverse(a, b) {
+function sortLowToHigh(a, b) {
   return Number(a[0]) - Number(b[0]);
 }
 
@@ -311,15 +313,29 @@ function copyOrderBook(orderbook) {
 function getEffectivePrice(orderbook, pair, type, amount) {
   //
   const sortedOrderbook = sortOrderBook(orderbook, pair);
-  const effPrice = null;
+  let rollingAmount = 0;
+  let rollingOrders = 0;
+  const amountInNumber = Number(amount);
 
   // get the list of asks or bids depending on the type param.
   // this operation defaults to the bids list if type != "buy"
   const orderList =
     type === "buy" ? sortedOrderbook[pair].asks : sortedOrderbook[pair].bids;
-  console.log("order list");
-  console.log(orderList);
 
+  for (const entry of orderList) {
+    const price = Number(entry[0]);
+    const orders = Number(entry[1]);
+
+    if (price * orders <= amountInNumber - rollingAmount) {
+      rollingAmount += price * orders;
+      rollingOrders += orders;
+    } else {
+      rollingOrders += (amountInNumber - rollingAmount) / price;
+      break;
+    }
+  }
+
+  const effPrice = amountInNumber / rollingOrders;
   return effPrice;
 }
 // exports
