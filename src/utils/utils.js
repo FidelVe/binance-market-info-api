@@ -201,34 +201,69 @@ function updateMemoryOrderBook(orderbook, diff) {
  * gets the top orders (size of orderLength) of the in-memory orderbook
  * @param {Object} orderbook - in-memory orderbook
  * @param {number} orderLength - size or orders to return
+ * @param {null | string} onlyPair - if the param is a supported pair the
+ * function will only sort that pair
  */
-function getTopOrders(orderbook, orderLength = 5) {
+function getTopOrders(orderbook, orderLength = 5, onlyPair = null) {
   const topOrderBooks = getOrderBookInitState();
   const sortedOrderbook = sortOrderBook(orderbook);
 
-  pairs.forEach(pair => {
-    topOrderBooks[pair].bids = JSON.stringify(
-      sortedOrderbook[pair].bids.slice(0, orderLength)
-    );
-    topOrderBooks[pair].asks = JSON.stringify(
-      sortedOrderbook[pair].asks.slice(0, orderLength)
-    );
-  });
+  if (onlyPair == null) {
+    pairs.forEach(pair => {
+      topOrderBooks[pair].bids = JSON.stringify(
+        sortedOrderbook[pair].bids.slice(0, orderLength)
+      );
+      topOrderBooks[pair].asks = JSON.stringify(
+        sortedOrderbook[pair].asks.slice(0, orderLength)
+      );
+    });
+  } else {
+    if (pairs.includes(onlyPair)) {
+      topOrderBooks[onlyPair].bids = JSON.stringify(
+        sortedOrderbook[onlyPair].bids.slice(0, orderLength)
+      );
+      topOrderBooks[onlyPair].asks = JSON.stringify(
+        sortedOrderbook[onlyPair].asks.slice(0, orderLength)
+      );
+    } else {
+      // if the value of onlyPair is not a supported pair inside the
+      // pairs array
+      throw new Error(`unsupported pair: "${onlyPair}`);
+    }
+  }
   return topOrderBooks;
 }
 
 /**
  * sorts an orderbook
  * @param {Object} orderbook - orderbook to sort
+ * @param {null | string} onlyPair - if the param is a supported pair the
+ * function will only sort that pair
  */
-function sortOrderBook(orderbook) {
+function sortOrderBook(orderbook, onlyPair = null) {
   const sortedOrderBook = getOrderBookInitState();
-  pairs.forEach(pair => {
-    sortedOrderBook[pair].bids = [...orderbook[pair].bids].sort(customSort);
-    sortedOrderBook[pair].asks = [...orderbook[pair].asks].sort(
-      customSortReverse
-    );
-  });
+
+  if (onlyPair == null) {
+    pairs.forEach(pair => {
+      sortedOrderBook[pair].bids = [...orderbook[pair].bids].sort(customSort);
+      sortedOrderBook[pair].asks = [...orderbook[pair].asks].sort(
+        customSortReverse
+      );
+    });
+  } else {
+    if (pairs.includes(onlyPair)) {
+      sortedOrderBook[onlyPair].bids = [...orderbook[onlyPair].bids].sort(
+        customSort
+      );
+      sortedOrderBook[onlyPair].asks = [...orderbook[onlyPair].asks].sort(
+        customSortReverse
+      );
+    } else {
+      // if the value of onlyPair is not a supported pair inside the
+      // pairs array
+      throw new Error(`unsupported pair: "${onlyPair}`);
+    }
+  }
 
   return sortedOrderBook;
 }
@@ -249,6 +284,7 @@ function customSortReverse(a, b) {
 
 /**
  * function to make a copy with new Maps of the orderbook
+ * @param {object} orderbook - orderbook
  */
 function copyOrderBook(orderbook) {
   const copyOfOrderBook = {};
@@ -263,6 +299,29 @@ function copyOrderBook(orderbook) {
   return copyOfOrderBook;
 }
 
+/**
+ * Returns the effective price of a query when pair, amount and type
+ * is given
+ * @param {Object} orderbook - orderbook
+ * @param {string} pair - should be one of the strings inside the pairs var
+ * @param {string} type - should either be "buy" or "sell"
+ * @param {number} amount - should be a number or a string that can be
+ * converted into a number with Number(amount)
+ */
+function getEffectivePrice(orderbook, pair, type, amount) {
+  //
+  const sortedOrderbook = sortOrderBook(orderbook, pair);
+  const effPrice = null;
+
+  // get the list of asks or bids depending on the type param.
+  // this operation defaults to the bids list if type != "buy"
+  const orderList =
+    type === "buy" ? sortedOrderbook[pair].asks : sortedOrderbook[pair].bids;
+  console.log("order list");
+  console.log(orderList);
+
+  return effPrice;
+}
 // exports
 module.exports = {
   createMemoryOrderBook,
@@ -273,5 +332,6 @@ module.exports = {
   getTopOrders,
   sortOrderBook,
   copyOrderBook,
-  getOrderBookInitState
+  getOrderBookInitState,
+  getEffectivePrice
 };
