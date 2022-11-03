@@ -98,7 +98,12 @@ const getEffPrice = async (req, res) => {
         req.params.opType,
         req.query.limit
       );
-      response.result = maxOrderSize;
+
+      if (maxOrderSize == null) {
+        response.result = "Order query outside of range of current orderbook";
+      } else {
+        response.result = maxOrderSize;
+      }
     } else {
       const effPrice = utils.getEffectivePrice(
         copyOfOrderBook,
