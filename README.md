@@ -2,13 +2,27 @@
 
 The following is a REST API build using nodejs and expressjs, it uses websocket connections to the BINANCE API to retrieve and build a local in-memory orderbook for a set of specified pairs ('btcusdt', 'ethusdt' and 'bnbusdt'). The REST server exposes the following endpoints:
 * `/api/v1/pairs` > Returns a list of available pairs.
-* `/api/v1/pairs/:pair` > Returns the top bids and ask for the specified pair.
+* `/api/v1/pairs/:pair` > Returns the top bids and asks for the specified pair.
 * `/api/v1/eff-price/:pairName-:opType-:amount?limit={LIMIT}` > Given a pair name, operation type and amount to trade this endpoint returns the effective price. If a 'limit' value is specified it retrieves the maximum order size that can be executed.
 
 
 # Install
 
+Clone the repo using the following command:
+```
+git clone git@github.com:FidelVe/binance-market-info-api.git
+```
+
+After cloning the repo, run the following command to install all the dependencies:
+```
+npm install
+```
+
 # Run tests
+The application uses Mocha for running unit test. To run the test simply use the following command:
+```
+npm run test
+```
 
 # REST API
 
@@ -26,7 +40,7 @@ curl localhost:3001/api/v1/pairs
 {"result":["btcusdt","ethusdt","bnbusdt"]}
 ```
 
-## Get top bids and ask for a given pair
+## Get top bids and asks for a given pair
 ### Request
 `GET /api/v1/pairs/:pair`
 
@@ -69,5 +83,3 @@ curl localhost:3001/api/v1/eff-price/btcusdt-sell-200?limit=20198
 ```
 {"result":"Order query outside of range of current orderbook"}
 ```
-
-
