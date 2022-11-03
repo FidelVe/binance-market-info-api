@@ -19,8 +19,6 @@ async function httpx(params, data = false, runSecured = true) {
     method = https;
   }
 
-  console.log("request params");
-  console.log(params);
   const promisifiedQuery = new Promise((resolve, reject) => {
     const query = method.request(params, res => {
       // Print status code on console

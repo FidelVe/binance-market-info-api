@@ -22,7 +22,6 @@ const getPair = async (req, res) => {
   } else {
     response.result = `Pair "${req.params.pair}" unsupported`;
   }
-  console.log(req.params);
 
   // response
   res.json(response);
@@ -49,8 +48,9 @@ const getPairs = async (req, res) => {
  */
 const getEffPrice = async (req, res) => {
   //
-  console.log("request to '/api/v1/eff-price/:pairName-:opType-:amount'");
-  console.log(req.params);
+  console.log(
+    "request to '/api/v1/eff-price/:pairName-:opType-:amount?limit=<LIMIT>'"
+  );
   res.set("Connection", "close").status(200);
   const response = {
     result: null
@@ -77,16 +77,36 @@ const getEffPrice = async (req, res) => {
     response.result = `Param 'pairName' received invalid type: it should be one of ${utils.pairs}, value received was '${req.params.pairName}'`;
   }
 
+  // if the request has a 'limit' as a query param, like in the following
+  // example:
+  // - /api/v1/eff-price/:pairName-:opType-:amount?limit=<LIMIT>
+  if (
+    Object.keys(req.query).includes("limit") &&
+    Number.isNaN(Number(req.query.limit))
+  ) {
+    paramsAreCorrect = false;
+    response.result = `Query  param 'limit' received invalid type: received '${req.query.limit}' and value should be of type 'Number'`;
+  }
+
   // if req.params types are all correct
   if (paramsAreCorrect === true) {
     const copyOfOrderBook = utils.copyOrderBook(req.inMemoryOrderBook);
-    const effPrice = utils.getEffectivePrice(
-      copyOfOrderBook,
-      req.params.pairName,
-      req.params.opType,
-      req.params.amount
-    );
-    response.result = effPrice;
+    if (Object.keys(req.query).includes("limit")) {
+      const maxOrderSize = utils.getMaxOrderSize(
+        copyOfOrderBook,
+        req.params.pairName,
+        req.params.opType,
+        req.query.limit
+      );
+    } else {
+      const effPrice = utils.getEffectivePrice(
+        copyOfOrderBook,
+        req.params.pairName,
+        req.params.opType,
+        req.params.amount
+      );
+      response.result = effPrice;
+    }
   }
   // response
   res.json(response);

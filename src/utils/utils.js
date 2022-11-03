@@ -338,6 +338,34 @@ function getEffectivePrice(orderbook, pair, type, amount) {
   const effPrice = amountInNumber / rollingOrders;
   return effPrice;
 }
+
+function getMaxOrderSize(orderbook, pair, type, amount) {
+  const sortedOrderbook = sortOrderBook(orderbook, pair);
+  let rollingAmount = 0;
+  let rollingOrders = 0;
+  const amountInNumber = Number(amount);
+
+  // get the list of asks or bids depending on the type param.
+  // this operation defaults to the bids list if type != "buy"
+  const orderList =
+    type === "buy" ? sortedOrderbook[pair].asks : sortedOrderbook[pair].bids;
+
+  for (const entry of orderList) {
+    const price = Number(entry[0]);
+    const orders = Number(entry[1]);
+
+    if (price * orders <= amountInNumber - rollingAmount) {
+      rollingAmount += price * orders;
+      rollingOrders += orders;
+    } else {
+      rollingOrders += (amountInNumber - rollingAmount) / price;
+      break;
+    }
+  }
+
+  const effPrice = amountInNumber / rollingOrders;
+  return effPrice;
+}
 // exports
 module.exports = {
   createMemoryOrderBook,
@@ -349,5 +377,6 @@ module.exports = {
   sortOrderBook,
   copyOrderBook,
   getOrderBookInitState,
-  getEffectivePrice
+  getEffectivePrice,
+  getMaxOrderSize
 };
